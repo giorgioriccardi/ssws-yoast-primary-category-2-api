@@ -2,14 +2,14 @@
 
 /**
  * @package SSWS Yoast Primary Category 2 WP REST API
- * @version 1.0.3
+ * @version 1.0.5
  */
 /*
 Plugin Name: SSWS Yoast Primary Category 2 WP REST API
 Plugin URI: https://github.com/giorgioriccardi/
 Description: Add Yoast post primary category to the WP REST API
 Author: Giorgio Riccardi
-Version: 1.0.3
+Version: 1.0.5
 Author URI: https://www.seatoskywebsolutions.ca/
 Require: Wordpress Seo plugin by Yoast
  */
@@ -19,7 +19,7 @@ Require: Wordpress Seo plugin by Yoast
  *
  * Custom fields are provided by the Yoast SEO plugin
  * 
- * Tested up to WP 5.3.x
+ * Tested up to WP 5.6.2
  */
 
 class Rest_Api_Posts_By_Primary_Category
@@ -30,6 +30,9 @@ class Rest_Api_Posts_By_Primary_Category
             register_rest_route('primary-cat/v1', '/yoastprimary', array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_posts_by_primary_cat'),
+                'permission_callback' => function () {
+                    return TRUE;
+                }
             ));
         });
     }

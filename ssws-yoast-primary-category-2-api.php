@@ -2,14 +2,14 @@
 
 /**
  * @package SSWS Yoast Primary Category 2 WP REST API
- * @version 1.0.1
+ * @version 1.0.2
  */
 /*
 Plugin Name: SSWS Yoast Primary Category 2 WP REST API
 Plugin URI: https://github.com/giorgioriccardi/
 Description: Add Yoast post primary category to the WP REST API
 Author: Giorgio Riccardi
-Version: 1.0.1
+Version: 1.0.2
 Author URI: https://www.seatoskywebsolutions.ca/
 Require: Wordpress Seo plugin by Yoast
  */
@@ -25,7 +25,7 @@ class Rest_Api_Posts_By_Primary_Category
     public function __construct()
     {
         add_action('rest_api_init', function () {
-            register_rest_route(SITE_PREFIX . '/v1', '/yoastprimary/(?P<id>\d+)', array(
+            register_rest_route('primary-cat/v1', '/yoastprimary', array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_posts_by_primary_cat'),
             ));
@@ -37,35 +37,34 @@ class Rest_Api_Posts_By_Primary_Category
         $child_cats = get_categories(array('parent' => $data['id']));
         $children = array();
         foreach ($child_cats as $child) {
-            $children[] = (string)$child->term_id;
+            $children[] = (string) $child->term_id;
         }
         $children[] = $data['id'];
 
         $posts = new WP_Query(
             array(
-                'post_status' => 'publish',
+                'post_status' => array('publish', 'draft'),
+                'posts_per_page' => -1,
                 'meta_query' => array(
                     array(
                         'key' => '_yoast_wpseo_primary_category',
                         'value' => $children,
                         'compare' => 'IN',
                     ),
-                )
+                ),
             )
         );
         $return = array();
         while ($posts->have_posts()) {
             $posts->the_post();
             $return_post = array();
-            if (!get_the_post_thumbnail_url()) {
-                // I set this constant in my theme's function.php
-                $return_post['thumb'] = CHILD_THEME_URI . '/assets/imgs/default-thumbnail.jpg';
-            } else {
-                $return_post['thumb'] = get_the_post_thumbnail_url();
-            }
+
+            $return_post['primary-category-dataset'] = get_the_category($posts->ID)[0];
             $return_post['link'] = get_the_permalink();
             $return_post['title'] = get_the_title();
-            $return_post['time'] = get_the_time('F d, Y');
+            $return_post['id'] = get_the_ID();
+            $return_post['slug'] = get_post_field('post_name', get_post());
+            $return_post['status'] = get_post_status();
             $return[] = $return_post;
         }
         return $return;
